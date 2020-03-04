@@ -105,6 +105,7 @@
                                       v-on="on"
                                       v-model="editedItem.lastOperDt" 
                                       label="Дата-время операции"
+                                      :rules="lastOperDtRules"
                                       hint="ДД.ММ.ГГГГ, ЧЧ:ММ"
                                       v-mask="maskLastOperDt"
                                       readonly
@@ -192,6 +193,10 @@
       invoiceNumberRules: [
         v => !!v || 'Требуется номер накладной',
         v => (v && v.length >= 8) ||  'В номере накладной должно быть 8 символов'
+      ],
+      lastOperDtRules: [
+        v => ( v !== '-' ) || 'Требуется ввести дату',
+
       ],
 
       headers: [
@@ -289,12 +294,12 @@
       maxDate() {
         const date = new Date();
         let newDate = date.toLocaleString("ru-RU", 
-                  {
-                    year: 'numeric',
-                    month: 'numeric',
-                    day: 'numeric',
-                  }
-                );
+          {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+          }
+        );
 
         const [month, day, year] = newDate.split('.')
         return newDate = `${year}-${day}-${month}`
