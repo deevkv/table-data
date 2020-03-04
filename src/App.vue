@@ -17,6 +17,7 @@
               :headers="headers"
               :items="desserts"
               sort-by="calories"
+              id="dataTable"
               class="elevation-1"
               mobile-breakpoint="767"
               @click:row ="editItem"
@@ -192,12 +193,12 @@
 
       headers: [
         { text: '№ п/п', align: 'end', value: 'ordNumber'},
-        { text: 'Номер вагона', value: 'carNumber' },
-        { text: 'Индекс поезда', value: 'trainIndex' },
-        { text: 'Номер поезда', align: 'center', value: 'trainNumber' },
-        { text: 'Статус', align: 'center', value: 'carStatus' },
-        { text: 'Дата-время операции', align: 'center', value: 'lastOperDt' },
-        { text: '№ Накладной', value: 'invoiceNumber' },
+        { text: 'Номер вагона', align: 'end', value: 'carNumber' },
+        { text: 'Индекс поезда', align: 'end', value: 'trainIndex' },
+        { text: 'Номер поезда', align: 'end', value: 'trainNumber' },
+        { text: 'Статус', align: 'end', value: 'carStatus' },
+        { text: 'Дата-время операции', align: 'end', value: 'lastOperDt' },
+        { text: '№ Накладной', align: 'end', value: 'invoiceNumber' },
         { text: 'ИД Накладной', align: 'end', value: 'invoiceId' },
         { text: 'state id', align: 'end', value: 'stateId' },
       ],
@@ -250,7 +251,7 @@
     created () {
       this.initialize()
     },
-    
+
     methods: {
       onSubmit () {
         if (this.$refs.form.validate()) {
@@ -328,15 +329,12 @@
   .app-container {
     background: #f6f6f6; 
   }
-  /* 
-  .table hr {
-    text-align: start !important;
-  }
-  .table td:first-child  {
-    padding-right: 2.8em !important;
-  }
   
-  .table td:last-child  {
-    padding-right: 2.8em !important;
-  } */
+  #dataTable th {
+    text-align: center !important;
+  }
+   #dataTable td {
+    text-align: center !important;
+  }
+
 </style>
