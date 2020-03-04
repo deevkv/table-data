@@ -2,16 +2,19 @@
    <v-app id="inspire">
     <v-content>
       <v-container
-        class="fill-height app-container"
+        class="app-container"
         fluid
       >
         <v-row
+          class="fill-height"
           align="center"
           justify="center"
         >
           <v-col
             cols="12"
-            sm="10"
+            sm="12"
+            md="12"
+            lg="10"
           >
             <v-data-table
               :headers="headers"
@@ -19,7 +22,7 @@
               sort-by="calories"
               id="dataTable"
               class="elevation-1"
-              mobile-breakpoint="767"
+              mobile-breakpoint="879"
               @click:row ="editItem"
             >
               <template v-slot:top>
@@ -327,7 +330,9 @@
 
 <style>
   .app-container {
-    background: #f6f6f6; 
+    background: #f6f6f6;
+    height: 100%;
+
   }
   
   #dataTable th {
