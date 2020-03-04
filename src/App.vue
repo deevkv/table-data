@@ -48,7 +48,7 @@
                                   label="Номер поезда"
                                   :rules="trainNumberRules"
                                   :counter="4"
-                                  type="number"
+                                  v-mask="maskTrainNumber"
                                   required
                                 > 
                                 </v-text-field>
@@ -63,7 +63,7 @@
                                   label="ИД Накладной"
                                   :rules="invoiceIdRules"
                                   :counter="9"
-                                  type="number"
+                                  v-mask="maskInvoiceId"
                                   required
                                 >
                                 </v-text-field>
@@ -75,6 +75,10 @@
                                   label="№ Накладной"
                                   :rules="invoiceNumberRules"
                                   :counter="8"
+                                  hint="ЭО######"
+                                  v-mask="maskInvoiceNumber"
+                                  required
+
                                 > 
                                 </v-text-field>
                               </v-col>
@@ -82,16 +86,41 @@
                                 <v-text-field color="red" disabled v-model="editedItem.stateId" label="state id"></v-text-field>
                               </v-col>
                                <v-col cols="12" sm="6" md="6">
-                                <v-text-field 
-                                  color="black" 
-                                  v-model="editedItem.lastOperDt" 
-                                  label="Дата-время операции"
-                                  :rules="lastOperDtRules"
-                                  hint="ДД/ММ/ГГГГ"
-                                  
-                                  required
+                                <v-menu
+                                  :close-on-content-click="false"
+                                  v-model="menu"
+                                  :nudge-right="40"
+                                  transition="scale-transition"
+                                  offset-y
+                                  full-width
+                                  min-width="290px"
                                 >
-                                </v-text-field>
+                                  <template v-slot:activator="{ on }">
+                                    <v-text-field 
+                                      color="black"
+                                      v-on="on"
+                                      v-model="editedItem.lastOperDt" 
+                                      label="Дата-время операции"
+                                      hint="ДД.ММ.ГГГГ, ЧЧ:ММ"
+                                      v-mask="maskLastOperDt"
+                                      readonly
+                                    >
+                                    </v-text-field>
+                                  </template>  
+                                  <v-date-picker
+                                    ref="picker"
+                                    v-model="myNewDate"
+                                    no-title 
+                                    scrollable
+                                    :max="maxDate()"
+                                    min="01-01-1950"
+
+                                  >
+                                    <v-spacer></v-spacer>
+                                    <v-btn text color="red" @click="menu = false">Cancel</v-btn>
+                                    <v-btn text color="red" @click="formatDate(myNewDate)">OK</v-btn>
+                                  </v-date-picker>
+                                </v-menu>  
                               </v-col>
                             </v-row>
                           </v-container>
@@ -114,8 +143,8 @@
                 <span v-if="item.lastOperDt">{{new Date(item.lastOperDt).toLocaleString("ru-RU", 
                   {
                     year: 'numeric',
-                    month: 'numeric',
                     day: 'numeric',
+                    month: 'numeric',
                     hour: 'numeric',
                     minute: 'numeric'
                   }
@@ -134,26 +163,33 @@
 </template>
 
 <script>
-    export default {
+  import userDataJson from '../public/table-data.json'
+
+  export default {
     data: () => ({
+      userDataJson: userDataJson,
+      info: null,
       dialog: false,
       valid: false,
+      menu: false,
+      myNewDate: '',
+      maskTrainNumber: '####',
+      maskInvoiceNumber: 'ЭО######',
+      maskInvoiceId: '#########',
+      maskLastOperDt: '##/##/####, ##:##',
       trainNumberRules: [
         v => !!v || 'Требуется номер поезда',
-        v => (v.length >= 4 && v.length <= 4) ||  'Номер должен быть равен 4 символам'
+        v => (v && v.length >= 4 && v.length <= 4) ||  'Номер должен быть равен 4 символам'
       ],
       invoiceIdRules: [
         v => !!v || 'Требуется ИД накладной',
-        v => (v.length >= 9 && v.length <= 9) ||  'ИД накладной долджно быть 9 символов'
+        v => (v && v.length >= 9 && v.length <= 9) ||  'ИД накладной долджно быть 9 символов'
       ],
       invoiceNumberRules: [
         v => !!v || 'Требуется номер накладной',
-        v => v.length >= 8 ||  'Name must be less than 8 characters'
+        v => (v && v.length >= 8) ||  'В номере накладной должно быть 8 символов'
       ],
-      lastOperDtRules: [
-        v => !!v || 'Требуется дата',
-        v => v.length >= 8 ||  'Name must be less than 8 characters'
-      ],
+
       headers: [
         { text: '№ п/п', align: 'end', value: 'ordNumber'},
         { text: 'Номер вагона', value: 'carNumber' },
@@ -191,6 +227,20 @@
       },
     }),
 
+    filters: {
+      filterFormatDataTime(value) {
+        
+        if(value) {
+
+          const [month, day, year] = value.split('.')
+          value = `${day}.${month}.${year}`
+        } else {
+          value = '-'
+        }
+        return value;
+      }
+    },
+
     watch: {
       dialog (val) {
         val || this.close()
@@ -200,7 +250,7 @@
     created () {
       this.initialize()
     },
-
+    
     methods: {
       onSubmit () {
         if (this.$refs.form.validate()) {
@@ -209,6 +259,12 @@
           }
           window.console.log(user) 
         }
+      },
+      formatDate (date) {
+        if (!date) return null
+        this.menu = false
+        const [year, month, day] = date.split('-')
+        return this.editedItem.lastOperDt = `${day}.${month}.${year}`
       },
       formatDataTime(value) {
         if(value) {
@@ -221,48 +277,26 @@
               minute: 'numeric'
             }
           )
-
         } else {
           value = '-'
         }
         return value;
       },
+      maxDate() {
+        const date = new Date();
+        let newDate = date.toLocaleString("ru-RU", 
+                  {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                  }
+                );
+
+        const [month, day, year] = newDate.split('.')
+        return newDate = `${year}-${day}-${month}`
+      },
       initialize () {
-        this.desserts = [
-          {
-              "ordNumber": 1,
-              "carNumber": "94003894",
-              "trainIndex": "035004766035601",
-              "trainNumber": "9999",
-              "carStatus": "составлен в поезд",
-              "invoiceId": "923210370",
-              "invoiceNumber": "ЭО560089",
-              "stateId": 34,
-              "lastOperDt": "2019-08-11T20:51:00.000Z"
-          },
-          {
-              "ordNumber": 2,
-              "carNumber": "94139292",
-              "trainIndex": "035004766035601",
-              "trainNumber": "9999",
-              "carStatus": "составлен в поезд",
-              "invoiceId": "923210370",
-              "invoiceNumber": "ЭО560089",
-              "stateId": 34,
-              "lastOperDt": "2019-08-12T20:55:00.000Z"
-          },
-          {
-              "ordNumber": 3,
-              "carNumber": "94189768",
-              "trainIndex": null,
-              "trainNumber": null,
-              "carStatus": "",
-              "invoiceId": "924094926",
-              "invoiceNumber": "ЭО730743",
-              "stateId": 3,
-              "lastOperDt": null
-          }
-        ]
+        this.desserts = this.userDataJson
       },
 
       editItem (item) {
@@ -306,17 +340,3 @@
     padding-right: 2.8em !important;
   } */
 </style>
-
-
-<!-- <template v-slot:item.lastOperDt="{ item }">
-                <div v-if="item.lastOperDt">{{new Date(item.lastOperDt).toLocaleString("ru-RU", 
-                  {
-                      year: 'numeric',
-                      month: 'numeric',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: 'numeric'
-                  }
-                )}}</div>
-                <div v-else><p class="text-sm-center">-</p></div>
-             </template> -->
