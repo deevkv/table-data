@@ -145,16 +145,7 @@
                   </v-dialog>
               </template>
               <template v-slot:item.lastOperDt="{ item }">
-                <span v-if="item.lastOperDt">{{new Date(item.lastOperDt).toLocaleString("ru-RU", 
-                  {
-                    year: 'numeric',
-                    day: 'numeric',
-                    month: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric'
-                  }
-                )}}</span>
-                <span v-else>-</span>
+                <span>{{item.lastOperDt | filterFormatDataTime }}</span> 
               </template>  
               <template v-slot:no-data>
                 <v-btn color="primary" @click="initialize">Reset</v-btn>
@@ -238,17 +229,35 @@
 
     filters: {
       filterFormatDataTime(value) {
-        
+
         if(value) {
 
-          const [month, day, year] = value.split('.')
-          value = `${day}.${month}.${year}`
+          let newDate = new Date(value)
+            if (newDate == 'Invalid Date') {
+              const [day, month, year] = value.split('/')
+              value = `${day}.${month}.${year}`
+              return value;
+          } else {
+            value = new Date(value).toLocaleDateString("ru", 
+              {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric'
+              }
+            )
+            const [day, month, year] = value.split('.')
+            value = `${day}.${month}.${year}`
+          }
         } else {
           value = '-'
         }
         return value;
       }
     },
+
+
 
     watch: {
       dialog (val) {
@@ -264,7 +273,8 @@
       onSubmit () {
         if (this.$refs.form.validate()) {
           const user = {
-            trainNumber: this.editedItem.trainNumber
+            trainNumber: this.editedItem.trainNumber,
+            lastOperDt: this.editedItem.lastOperDt
           }
           window.console.log(user) 
         }
@@ -277,7 +287,7 @@
       },
       formatDataTime(value) {
         if(value) {
-          value = new Date(value).toLocaleString("ru-RU", 
+          value = new Date(value).toLocaleDateString("ru-RU", 
             {
               year: 'numeric',
               month: 'numeric',
